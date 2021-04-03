@@ -19,7 +19,7 @@ const char html_page[] PROGMEM = R"(
     <h1>Rader</h1>
     <canvas id='rader' width='800px' height='400px'></canvas>
     <script>
-        const max_dist = 4000;
+        const max_dist = 2000;
         let canvas = document.getElementById('rader');
         var ctx = canvas.getContext('2d');
         var connection = new WebSocket('ws://' + location.hostname + ':81/', ['arduino']);
@@ -47,10 +47,23 @@ const char html_page[] PROGMEM = R"(
             x += (canvas.width / 2);
             let y = Math.sin(deg / 180 * Math.PI) * dist / max_dist * canvas.height;
             y = canvas.height - y;
+            let max_x = Math.cos(deg / 180 * Math.PI) * canvas.width / 2;
+            max_x += (canvas.width / 2);
+            let max_y = Math.sin(deg / 180 * Math.PI) * canvas.height;
+            max_y = canvas.height - max_y;
+            
             ctx.fillStyle = 'rgba(0,0,0,0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgb(255,0,0)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, canvas.height);
+            ctx.lineTo(max_x, max_y);
+            ctx.stroke();
+            
             ctx.strokeStyle = 'rgb(0,255,0)';
-            ctx.lineWidth = 20;
+            ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(canvas.width/2, canvas.height);
             ctx.lineTo(x, y);

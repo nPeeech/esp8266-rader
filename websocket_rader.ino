@@ -50,7 +50,7 @@ int measure_distance(){
     if(duration > 0) {
       duration /= 2;
       distance = duration*340/1000;
-      if(distance < 4000) return (int)distance;
+      if(distance < 2000) return (int)distance;
     }
     return -1;
 }
@@ -134,7 +134,7 @@ void loop() {
     String json_str = JSON.stringify(json_obj);
     webSocket.broadcastTXT((const char *)json_str.c_str());
     Serial.println(json_obj);
-    delay(50);
+//    delay(50);
     
     if(deg>=180) sign=-1;
     else if(deg<=0) sign=1;
