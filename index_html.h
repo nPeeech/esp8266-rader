@@ -50,7 +50,7 @@ const char html_page[] PROGMEM = R"(
             ctx.fillStyle = 'rgba(0,0,0,0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = 'rgb(0,255,0)';
-            ctx.lineWidth = 30;
+            ctx.lineWidth = 20;
             ctx.beginPath();
             ctx.moveTo(canvas.width/2, canvas.height);
             ctx.lineTo(x, y);

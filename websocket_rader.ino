@@ -6,9 +6,14 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <Hash.h>
+#include <Servo.h>
 #include "MYSSID.h"
 #include "index_html.h"
+#define srvpin 14
+#define echopin 5
+#define trigpin 4
 
+Servo myservo;
 ESP8266WebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
@@ -31,6 +36,23 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
             break;
     }
 
+}
+
+int measure_distance(){
+    double duration = 0;
+    double distance = 0; //みりめーとる
+    digitalWrite(trigpin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigpin, HIGH); //超音波照射
+    delayMicroseconds(10);
+    digitalWrite(trigpin, LOW);
+    duration = pulseIn(echopin, HIGH);
+    if(duration > 0) {
+      duration /= 2;
+      distance = duration*340/1000;
+      if(distance < 4000) return (int)distance;
+    }
+    return -1;
 }
 
 void setup() {
@@ -84,6 +106,12 @@ void setup() {
     // Add service to MDNS
     MDNS.addService("http", "tcp", 80);
     MDNS.addService("ws", "tcp", 81);
+
+    myservo.attach(srvpin);
+    myservo.write(0);
+    pinMode(echopin, INPUT);
+    pinMode(trigpin, OUTPUT);
+    delay(1000);
 }
 
 unsigned long last_10sec = 0;
@@ -96,24 +124,27 @@ void loop() {
     unsigned long t = millis();
     webSocket.loop();
     server.handleClient();
+    myservo.write(deg);
+    delay(20);
+    int dist = measure_distance();
 
-    if((t - last_10sec) > 10 * 10) {
+    JSONVar json_obj;
+    json_obj["deg"] = deg;
+    json_obj["dist"] = dist;
+    String json_str = JSON.stringify(json_obj);
+    webSocket.broadcastTXT((const char *)json_str.c_str());
+    Serial.println(json_obj);
+    delay(50);
+    
+    if(deg>=180) sign=-1;
+    else if(deg<=0) sign=1;
+    deg+=sign*inc;
+        
+    if((t - last_10sec) > 10 * 1000) {
         counter++;
         bool ping = (counter % 2);
         int i = webSocket.connectedClients(ping);
         Serial.printf("%d Connected websocket clients ping: %d\n", i, ping);
         last_10sec = millis();
-
-        //dummy data
-        if(deg>=180) sign=-1;
-        else if(deg<=0) sign=1;
-        deg+=sign*inc;
-        
-        JSONVar obj;
-        obj["deg"] = deg;
-        obj["dist"] = 3500;
-        String json_str = JSON.stringify(obj);
-        webSocket.broadcastTXT((const char *)json_str.c_str());
-        Serial.println(obj);
     }
 }
